@@ -1,4 +1,3 @@
-/* src/index.css — Pastel theme (clean & safe) */
 :root{
   --lavender:#b39ddb;
   --peach:#ffd3c6;
@@ -6,70 +5,69 @@
   --text:#4a3f35;
   --muted:#6b7280;
   --radius:12px;
-  --card-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  --shadow:0 6px 18px rgba(0,0,0,0.06);
 }
 
 *{box-sizing:border-box}
 html,body,#root{height:100%;margin:0;padding:0}
 body{
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
   background:var(--cream);
+  font-family:Inter,system-ui,Arial;
   color:var(--text);
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
 }
 
-a { color: inherit; text-decoration: none; }
+.container{max-width:1100px;margin:26px auto;padding:0 16px}
 
-/* Buttons */
-.btn{padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:600}
-.btn.primary{background:var(--lavender);color:white;box-shadow:var(--card-shadow)}
-.btn.ghost{background:white;border:1px solid #efe7f7;color:var(--text)}
-.btn.danger{background:#ff8b94;color:white}
+.card{
+  background:white;
+  padding:18px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
 
-/* Inputs */
-.input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #efe7f7;margin-bottom:10px}
+.btn{
+  padding:10px 14px;
+  border-radius:10px;
+  border:0;
+  font-weight:600;
+  cursor:pointer;
+}
+.btn.primary{background:var(--lavender);color:white}
+.btn.ghost{background:white;border:1px solid #eee;color:var(--text)}
+.btn.danger{background:#ff7070;color:white}
 
-/* Layout */
-.container{max-width:1100px;margin:28px auto;padding:0 14px}
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 0}
-.topbar .brand{font-weight:700;color:var(--lavender);font-size:20px}
+.input{
+  width:100%;padding:10px 12px;
+  border-radius:10px;
+  border:1px solid #eee;
+  margin-bottom:10px;
+}
 
-/* Landing */
-.landing{padding:40px 12px;text-align:center}
-.landing h1{font-size:36px;margin:6px 0}
-.landing p{color:var(--muted);margin:0}
-.options{display:flex;gap:18px;justify-content:center;margin-top:28px;flex-wrap:wrap}
-.option-card{width:260px;background:white;border-radius:14px;padding:22px;box-shadow:var(--card-shadow);cursor:pointer}
-.option-card h3{margin:8px 0}
-.option-card p{color:var(--muted);font-size:14px}
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding-bottom:14px;
+}
 
-/* Pages */
-.page{background:transparent;padding:18px 0}
-.card{background:white;border-radius:12px;padding:14px;box-shadow:var(--card-shadow)}
+.brand{color:var(--lavender);font-weight:700;font-size:22px}
+.small{font-size:13px;color:var(--muted)}
+
 .grid{display:grid;gap:16px}
 .grid.cols-3{grid-template-columns:repeat(3,1fr)}
 .grid.cols-2{grid-template-columns:repeat(2,1fr)}
-@media(max-width:900px){.grid.cols-3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){ .grid.cols-3{grid-template-columns:repeat(2,1fr)} }
 
-/* Listing */
-.listing-card{border-radius:10px;overflow:hidden}
-.listing-img{width:100%;height:160px;object-fit:cover;display:block}
+.listing-card{border-radius:12px;overflow:hidden;cursor:pointer}
+.listing-img{width:100%;height:160px;object-fit:cover}
 .listing-meta{padding:10px}
-.listing-title{font-weight:700;margin:0}
-.listing-sub{color:var(--muted);font-size:13px;margin-top:6px}
 
-/* Host form */
-.form-row{display:flex;gap:8px}
-.form-row .input{flex:1}
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,0.45);
+  display:flex;align-items:center;justify-content:center;
+}
+.modal{
+  background:white;padding:16px;border-radius:12px;
+  max-width:720px;width:90%;
+}
 
-/* Gallery modal */
-.modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.45);display:flex;align-items:center;justify-content:center;z-index:60}
-.modal{background:white;padding:18px;border-radius:12px;width:90%;max-width:720px;box-shadow:0 12px 30px rgba(0,0,0,0.2)}
-
-/* small helpers */
-.center{display:flex;align-items:center;justify-content:center}
-.small{font-size:13px;color:var(--muted)}
 .row{display:flex;align-items:center;gap:8px}
 .mt{margin-top:12px}
-.mb{margin-bottom:12px}

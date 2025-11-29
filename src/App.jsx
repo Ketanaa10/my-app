@@ -1,267 +1,265 @@
-// src/App.jsx
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 
-/* ------------------ Helpers ------------------ */
-const uid = (p = "") => `${p}${Date.now()}${Math.floor(Math.random() * 10000)}`;
+/* ---------------------- Helpers ---------------------- */
+const uid = (p = "") => p + Date.now() + Math.floor(Math.random() * 9999);
 
 const LS = {
-  get(k, fallback) {
-    try { return JSON.parse(localStorage.getItem(k)) ?? fallback; } catch { return fallback; }
+  get: (k, f) => {
+    try { return JSON.parse(localStorage.getItem(k)) ?? f; }
+    catch { return f; }
   },
-  set(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
 };
 
-/* default demo accounts (you can remove later) */
-const DEFAULT_DATA = {
-  hosts: [{ username: "host1", password: "1234", id: uid("h-") }],
-  users: [{ username: "user1", password: "1111", id: uid("u-") }],
-  listings: [
-    {
-      id: uid("lst-"),
-      title: "Cozy Riverside Home",
-      city: "Alleppey",
-      price: 18,
-      description: "Lovely backwater stay",
-      images: [], // empty, host can add images
-      hostId: null
-    }
-  ],
-  bookings: []
-};
-
-/* ------------------ App ------------------ */
+/* ---------------------- App ---------------------- */
 export default function App() {
-  // app mode: landing | host-signup | host-login | host-portal | user-signup | user-login | user-portal
-  const [mode, setMode] = useState(LS.get("app_mode", "landing"));
+  const [mode, setMode] = useState(LS.get("mode", "landing"));
 
-  // accounts & data
-  const [hosts, setHosts] = useState(LS.get("hosts", DEFAULT_DATA.hosts));
-  const [users, setUsers] = useState(LS.get("users", DEFAULT_DATA.users));
-  const [listings, setListings] = useState(LS.get("listings", DEFAULT_DATA.listings));
-  const [bookings, setBookings] = useState(LS.get("bookings", DEFAULT_DATA.bookings));
+  const [hosts, setHosts] = useState(LS.get("hosts", []));
+  const [users, setUsers] = useState(LS.get("users", []));
+  const [listings, setListings] = useState(LS.get("listings", []));
+  const [bookings, setBookings] = useState(LS.get("bookings", []));
 
-  // current sessions
   const [currentHost, setCurrentHost] = useState(LS.get("currentHost", null));
   const [currentUser, setCurrentUser] = useState(LS.get("currentUser", null));
 
-  // UI state
-  const [viewListing, setViewListing] = useState(null); // listing object for gallery/detail modal
-  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [viewListing, setViewListing] = useState(null);
   const [bookingTarget, setBookingTarget] = useState(null);
 
-  // persist data
+  /* persist to LS */
+  useEffect(() => LS.set("mode", mode), [mode]);
   useEffect(() => LS.set("hosts", hosts), [hosts]);
   useEffect(() => LS.set("users", users), [users]);
   useEffect(() => LS.set("listings", listings), [listings]);
   useEffect(() => LS.set("bookings", bookings), [bookings]);
   useEffect(() => LS.set("currentHost", currentHost), [currentHost]);
   useEffect(() => LS.set("currentUser", currentUser), [currentUser]);
-  useEffect(() => LS.set("app_mode", mode), [mode]);
 
-  /* ---------------- Landing ---------------- */
+  /* ---------------- HELPERS ---------------- */
+  function placeholderImage(title = "stay") {
+    return `https://picsum.photos/seed/${encodeURIComponent(title.slice(0, 8))}/800/500`;
+  }
+
+  /* ---------------- LANDING ---------------- */
   function Landing() {
     return (
       <div className="landing container">
         <div className="topbar">
           <div className="brand">HomestayConnect</div>
           <div className="row">
-            {currentHost ? <div className="small">Host: <strong>{currentHost.username}</strong></div> : null}
-            {currentUser ? <div className="small">User: <strong>{currentUser.username}</strong></div> : null}
+            {currentHost && <div className="small">Host: {currentHost.username}</div>}
+            {currentUser && <div className="small">User: {currentUser.username}</div>}
           </div>
         </div>
 
-        <h1 style={{marginTop:18}}>Welcome to HomestayConnect</h1>
+        <h1>Welcome</h1>
         <p className="small">Choose how you want to continue</p>
 
-        <div className="options mt">
-          <div className="option-card card" onClick={() => setMode("host-login")}>
+        <div className="options row mt">
+          <div
+            className="card"
+            style={{ cursor: "pointer", width: 250 }}
+            onClick={() => setMode("host-login")}
+          >
             <h3>🏡 Host</h3>
-            <p className="small">Add & manage your homestays</p>
+            <p className="small">Add and manage homestays</p>
           </div>
-          <div className="option-card card" onClick={() => setMode("user-login")}>
+
+          <div
+            className="card"
+            style={{ cursor: "pointer", width: 250 }}
+            onClick={() => setMode("user-login")}
+          >
             <h3>✨ User</h3>
-            <p className="small">Browse and book stays</p>
+            <p className="small">Browse & book stays</p>
           </div>
         </div>
 
-        <div style={{marginTop:24}} className="small">You can sign up as Host or User — credentials are saved in your browser.</div>
-
-        <section style={{marginTop:30}}>
-          <h3>Explore sample listings</h3>
-          <div className="grid cols-3">
-            {listings.map(l => (
-              <div key={l.id} className="listing card listing-card" onClick={() => { setViewListing(l); }}>
-                <img className="listing-img" src={l.images[0] || placeholderImage(l.title)} alt={l.title} />
-                <div className="listing-meta">
-                  <div className="listing-title">{l.title}</div>
-                  <div className="listing-sub small">{l.city} • ₹{l.price}/night</div>
-                </div>
+        <h3 className="mt">Featured Listings</h3>
+        <div className="grid cols-3">
+          {listings.map((l) => (
+            <div key={l.id} className="listing-card card" onClick={() => setViewListing(l)}>
+              <img
+                className="listing-img"
+                src={l.images?.[0] || placeholderImage(l.title)}
+                alt={l.title}
+              />
+              <div className="listing-meta">
+                <strong>{l.title}</strong>
+                <div className="small">{l.city} • ₹{l.price}/night</div>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
-  /* ---------------- Helpers ---------------- */
-  function placeholderImage(text = "stay") {
-    // nice simple placeholder using picsum with text hashed
-    const hash = encodeURIComponent(text.slice(0, 8));
-    return `https://picsum.photos/seed/${hash}/800/500`;
-  }
+  /* ---------------- SIGNUP / LOGIN ---------------- */
+  function Signup({ kind }) {
+    const [u, setU] = useState("");
+    const [p, setP] = useState("");
 
-  /* ---------------- Signup / Login (Hosts) ---------------- */
-  function HostSignup() {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+    function create() {
+      if (!u || !p) return alert("Fill all fields");
+      const arr = kind === "Host" ? hosts : users;
+      if (arr.find((x) => x.username === u)) return alert("Username taken");
 
-    function submit(e) {
-      e.preventDefault();
-      if (!username.trim() || !password.trim()) return alert("Enter username & password");
-      // check duplicate
-      if (hosts.find(h => h.username === username.trim())) return alert("Host username taken");
-      const newHost = { username: username.trim(), password: password.trim(), id: uid("h-") };
-      setHosts([newHost, ...hosts]);
-      setCurrentHost(newHost);
-      alert("Host account created ✅");
-      setMode("host");
+      const obj = { username: u, password: p, id: uid(kind[0] + "-") };
+
+      if (kind === "Host") {
+        setHosts([obj, ...hosts]);
+        setCurrentHost(obj);
+        setMode("host");
+      } else {
+        setUsers([obj, ...users]);
+        setCurrentUser(obj);
+        setMode("user");
+      }
     }
 
     return (
-      <div className="container page">
-        <h2>Host Sign Up</h2>
-        <form onSubmit={submit} style={{maxWidth:480}}>
-          <input className="input" placeholder="Username" value={username} onChange={(e)=>setUsername(e.target.value)} />
-          <input className="input" placeholder="Password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} />
-          <div style={{display:"flex",gap:8}}>
-            <button className="btn primary" type="submit">Create Host</button>
-            <button className="btn ghost" type="button" onClick={()=>setMode("landing")}>Cancel</button>
-          </div>
-        </form>
+      <div className="container">
+        <div className="card" style={{ maxWidth: 400, margin: "0 auto" }}>
+          <h2>{kind} Sign Up</h2>
+          <input className="input" placeholder="Username" value={u} onChange={(e) => setU(e.target.value)} />
+          <input className="input" placeholder="Password" type="password" value={p} onChange={(e) => setP(e.target.value)} />
+          <button className="btn primary" onClick={create}>
+            Create {kind}
+          </button>
+          <button className="btn ghost mt" onClick={() => setMode("landing")}>
+            Back
+          </button>
+        </div>
       </div>
     );
   }
 
-  function HostLogin() {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+  function Login({ kind }) {
+    const [u, setU] = useState("");
+    const [p, setP] = useState("");
 
-    function submit(e) {
-      e.preventDefault();
-      const found = hosts.find(h => h.username === username && h.password === password);
-      if (!found) return alert("Invalid host username or password");
-      setCurrentHost(found);
-      setMode("host");
+    function go() {
+      const arr = kind === "Host" ? hosts : users;
+      const found = arr.find((x) => x.username === u && x.password === p);
+      if (!found) return alert("Wrong username or password");
+
+      if (kind === "Host") {
+        setCurrentHost(found);
+        setMode("host");
+      } else {
+        setCurrentUser(found);
+        setMode("user");
+      }
     }
 
     return (
-      <div className="container page">
-        <h2>Host Login</h2>
-        <form onSubmit={submit} style={{maxWidth:480}}>
-          <input className="input" placeholder="Username" value={username} onChange={(e)=>setUsername(e.target.value)} />
-          <input className="input" placeholder="Password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} />
-          <div style={{display:"flex",gap:8}}>
-            <button className="btn primary" type="submit">Sign in</button>
-            <button className="btn ghost" type="button" onClick={()=>setMode("host-signup")}>Create account</button>
-            <button className="btn ghost" type="button" onClick={()=>setMode("landing")}>Back</button>
+      <div className="container">
+        <div className="card" style={{ maxWidth: 400, margin: "0 auto" }}>
+          <h2>{kind} Login</h2>
+          <input className="input" placeholder="Username" value={u} onChange={(e) => setU(e.target.value)} />
+          <input className="input" placeholder="Password" type="password" value={p} onChange={(e) => setP(e.target.value)} />
+          <div className="row mt">
+            <button className="btn primary" onClick={go}>Login</button>
+            <button className="btn ghost" onClick={() => setMode(kind === "Host" ? "host-signup" : "user-signup")}>Create</button>
           </div>
-        </form>
+        </div>
       </div>
     );
   }
 
-  /* ---------------- Host Portal ---------------- */
-  function HostPortal() {
+  /* ---------------- HOST PAGE ---------------- */
+  function HostPage() {
     const [title, setTitle] = useState("");
     const [city, setCity] = useState("");
     const [price, setPrice] = useState("");
-    const [description, setDescription] = useState("");
-    const [imageFiles, setImageFiles] = useState([]); // base64 strings
+    const [desc, setDesc] = useState("");
+    const [imgs, setImgs] = useState([]);
 
-    // file input handler: convert to base64
     function onFiles(e) {
       const files = Array.from(e.target.files || []);
-      const readers = files.map(f => {
-        return new Promise((resolve, reject) => {
-          const r = new FileReader();
-          r.onload = () => resolve(r.result);
-          r.onerror = reject;
-          r.readAsDataURL(f);
-        });
-      });
-      Promise.all(readers).then(results => setImageFiles(prev => [...prev, ...results])).catch(()=>alert("Image read error"));
+      Promise.all(
+        files.map(
+          (f) =>
+            new Promise((res) => {
+              const r = new FileReader();
+              r.onload = () => res(r.result);
+              r.readAsDataURL(f);
+            })
+        )
+      ).then((arr) => setImgs((prev) => [...prev, ...arr]));
     }
 
-    function addListing(e) {
-      e.preventDefault();
-      if (!title.trim() || !city.trim() || !price) return alert("Title, city and price required");
-      const newListing = {
-        id: uid("lst-"),
-        title: title.trim(),
-        city: city.trim(),
+    function add() {
+      if (!title || !city || !price) return alert("Fill details");
+
+      const obj = {
+        id: uid("l-"),
+        title,
+        city,
         price: Number(price),
-        description: description.trim(),
-        images: imageFiles,
+        description: desc,
+        images: imgs,
         hostId: currentHost.id,
-        createdAt: new Date().toISOString()
       };
-      setListings([newListing, ...listings]);
-      // reset
-      setTitle(""); setCity(""); setPrice(""); setDescription(""); setImageFiles([]);
+      setListings([obj, ...listings]);
+      setTitle("");
+      setCity("");
+      setPrice("");
+      setDesc("");
+      setImgs([]);
     }
 
-    function removeListing(id) {
+    function remove(id) {
       if (!confirm("Delete listing?")) return;
-      setListings(listings.filter(l => l.id !== id));
+      setListings(listings.filter((l) => l.id !== id));
     }
 
-    // host's own listings
-    const my = listings.filter(l => l.hostId === currentHost.id);
+    const mine = listings.filter((l) => l.hostId === currentHost.id);
 
     return (
       <div>
         <div className="topbar container">
-          <div className="brand">Host dashboard</div>
+          <div className="brand">Host Dashboard</div>
           <div className="row">
-            <div className="small">Signed in: <strong>{currentHost.username}</strong></div>
-            <button className="btn ghost" onClick={() => { setCurrentHost(null); setMode("landing"); }}>Logout</button>
+            <div className="small">{currentHost.username}</div>
+            <button className="btn ghost" onClick={() => { setCurrentHost(null); setMode("landing"); }}>
+              Logout
+            </button>
           </div>
         </div>
 
-        <div className="container page">
+        <div className="container">
           <div className="card">
-            <h3>Add new listing</h3>
-            <form onSubmit={addListing}>
-              <input className="input" placeholder="Title" value={title} onChange={(e)=>setTitle(e.target.value)} />
-              <input className="input" placeholder="City" value={city} onChange={(e)=>setCity(e.target.value)} />
-              <input className="input" placeholder="Price per night" value={price} onChange={(e)=>setPrice(e.target.value)} />
-              <textarea className="input" placeholder="Short description" value={description} onChange={(e)=>setDescription(e.target.value)} rows={3} />
-              <input type="file" accept="image/*" multiple onChange={onFiles} />
-              <div style={{display:"flex",gap:8,marginTop:8}}>
-                <button className="btn primary" type="submit">Add listing</button>
+            <h3>Add Listing</h3>
+            <input className="input" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <input className="input" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
+            <input className="input" placeholder="Price per night" value={price} onChange={(e) => setPrice(e.target.value)} />
+            <textarea className="input" rows="3" placeholder="Description" value={desc} onChange={(e) => setDesc(e.target.value)} />
+            <input type="file" multiple accept="image/*" onChange={onFiles} />
+
+            {imgs.length > 0 && (
+              <div className="row mt" style={{ flexWrap: "wrap" }}>
+                {imgs.map((s, i) => (
+                  <img key={i} src={s} style={{ width: 120, height: 80, objectFit: "cover", borderRadius: 8 }} alt="" />
+                ))}
               </div>
-              <div className="mt">
-                {imageFiles.length>0 && <div className="small">Preview:</div>}
-                <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:8}}>
-                  {imageFiles.map((s,i)=>(<img key={i} src={s} alt="" style={{width:120,height:80,objectFit:"cover",borderRadius:8}}/>))}
-                </div>
-              </div>
-            </form>
+            )}
+
+            <button className="btn primary mt" onClick={add}>Add</button>
           </div>
 
-          <h3 className="mt">Your listings</h3>
+          <h3 className="mt">Your Listings</h3>
           <div className="grid cols-3">
-            {my.length===0 && <div className="card small">You have not added any listings yet.</div>}
-            {my.map(l => (
-              <div className="card listing-card" key={l.id}>
-                <img className="listing-img" src={l.images[0] || placeholderImage(l.title)} alt={l.title} />
+            {mine.map((l) => (
+              <div key={l.id} className="listing-card card">
+                <img className="listing-img" src={l.images?.[0] || placeholderImage(l.title)} alt={l.title} />
                 <div className="listing-meta">
-                  <div className="listing-title">{l.title}</div>
-                  <div className="listing-sub small">{l.city} • ₹{l.price}/night</div>
-                  <div style={{marginTop:8}} className="row">
-                    <button className="btn ghost" onClick={()=>setViewListing(l)}>View</button>
-                    <button className="btn danger" onClick={()=>removeListing(l.id)}>Delete</button>
+                  <strong>{l.title}</strong>
+                  <div className="small">{l.city} • ₹{l.price}/night</div>
+                  <div className="row mt">
+                    <button className="btn ghost" onClick={() => setViewListing(l)}>View</button>
+                    <button className="btn danger" onClick={() => remove(l.id)}>Delete</button>
                   </div>
                 </div>
               </div>
@@ -272,111 +270,75 @@ export default function App() {
     );
   }
 
-  /* ---------------- Signup / Login (Users) ---------------- */
-  function UserSignup() {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+  /* ---------------- USER PAGE (with search + delete booking) ---------------- */
+  function UserPage() {
+    const [q, setQ] = useState("");
 
-    function submit(e) {
-      e.preventDefault();
-      if (!username.trim() || !password.trim()) return alert("Enter username & password");
-      if (users.find(u => u.username === username.trim())) return alert("User username taken");
-      const newUser = { username: username.trim(), password: password.trim(), id: uid("u-") };
-      setUsers([newUser, ...users]);
-      setCurrentUser(newUser);
-      alert("User account created ✅");
-      setMode("user");
+    function handleBook(l) {
+      setBookingTarget(l);
     }
 
-    return (
-      <div className="container page">
-        <h2>User Sign Up</h2>
-        <form onSubmit={submit} style={{maxWidth:480}}>
-          <input className="input" placeholder="Username" value={username} onChange={(e)=>setUsername(e.target.value)} />
-          <input className="input" placeholder="Password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} />
-          <div style={{display:"flex",gap:8}}>
-            <button className="btn primary" type="submit">Create User</button>
-            <button className="btn ghost" type="button" onClick={()=>setMode("landing")}>Cancel</button>
-          </div>
-        </form>
-      </div>
-    );
-  }
-
-  function UserLogin() {
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-
-    function submit(e) {
-      e.preventDefault();
-      const found = users.find(u => u.username === username && u.password === password);
-      if (!found) return alert("Invalid user username or password");
-      setCurrentUser(found);
-      setMode("user");
+    function deleteBooking(id) {
+      if (!confirm("Delete this booking?")) return;
+      setBookings((prev) => prev.filter((b) => b.id !== id));
     }
 
-    return (
-      <div className="container page">
-        <h2>User Login</h2>
-        <form onSubmit={submit} style={{maxWidth:480}}>
-          <input className="input" placeholder="Username" value={username} onChange={(e)=>setUsername(e.target.value)} />
-          <input className="input" placeholder="Password" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} />
-          <div style={{display:"flex",gap:8}}>
-            <button className="btn primary" type="submit">Sign in</button>
-            <button className="btn ghost" type="button" onClick={()=>setMode("user-signup")}>Create account</button>
-            <button className="btn ghost" type="button" onClick={()=>setMode("landing")}>Back</button>
-          </div>
-        </form>
-      </div>
-    );
-  }
-
-  /* ---------------- User Portal ---------------- */
-  function UserPortal() {
-    function startBooking(listing) {
-      if (!currentUser) { alert("Please sign in as a user first"); setMode("user-login"); return; }
-      setBookingTarget(listing);
-      setShowBookingModal(true);
-    }
+    // filter listings by search query (title or city)
+    const filtered = listings.filter((l) => {
+      if (!q || q.trim() === "") return true;
+      const s = q.trim().toLowerCase();
+      return (l.title || "").toLowerCase().includes(s) || (l.city || "").toLowerCase().includes(s);
+    });
 
     return (
       <div>
         <div className="topbar container">
-          <div className="brand">User portal</div>
+          <div className="brand">User Portal</div>
           <div className="row">
-            <div className="small">Signed in: <strong>{currentUser?.username}</strong></div>
-            <button className="btn ghost" onClick={() => { setCurrentUser(null); setMode("landing"); }}>Logout</button>
+            <div className="small">{currentUser.username}</div>
+            <button className="btn ghost" onClick={() => { setCurrentUser(null); setMode("landing"); }}>
+              Logout
+            </button>
           </div>
         </div>
 
-        <div className="container page">
+        <div className="container">
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
+            <input className="input" placeholder="Search by city or title..." value={q} onChange={(e) => setQ(e.target.value)} />
+            <button className="btn ghost" onClick={() => setQ("")}>Clear</button>
+          </div>
+
           <h3>Listings</h3>
           <div className="grid cols-3">
-            {listings.map(l => (
-              <div className="card listing-card" key={l.id}>
-                <img className="listing-img" src={l.images[0] || placeholderImage(l.title)} alt={l.title} />
+            {filtered.map((l) => (
+              <div key={l.id} className="listing-card card">
+                <img className="listing-img" src={l.images?.[0] || placeholderImage(l.title)} alt={l.title} />
                 <div className="listing-meta">
-                  <div className="listing-title">{l.title}</div>
-                  <div className="listing-sub small">{l.city} • ₹{l.price}/night</div>
-                  <div style={{marginTop:8}} className="row">
-                    <button className="btn ghost" onClick={()=>setViewListing(l)}>View</button>
-                    <button className="btn primary" onClick={()=>startBooking(l)}>Book</button>
+                  <strong>{l.title}</strong>
+                  <div className="small">{l.city} • ₹{l.price}</div>
+                  <div className="row mt">
+                    <button className="btn ghost" onClick={() => setViewListing(l)}>View</button>
+                    <button className="btn primary" onClick={() => handleBook(l)}>Book</button>
                   </div>
                 </div>
               </div>
             ))}
+            {filtered.length === 0 && <div className="card">No results for «{q}»</div>}
           </div>
 
           <h3 className="mt">Your Bookings</h3>
           <div className="grid cols-2">
-            {bookings.filter(b => b.userId === currentUser?.id).length === 0 && <div className="card small">No bookings yet</div>}
-            {bookings.filter(b => b.userId === currentUser?.id).map(b => (
-              <div className="card" key={b.id}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            {bookings.filter((b) => b.userId === currentUser.id).length === 0 && <div className="card small">No bookings yet</div>}
+            {bookings.filter((b) => b.userId === currentUser.id).map((b) => (
+              <div key={b.id} className="card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
-                    <div style={{fontWeight:700}}>{b.listingTitle}</div>
+                    <div style={{ fontWeight: 700 }}>{b.listingTitle}</div>
                     <div className="small">{b.guestName} • ID: {b.guestIdNo}</div>
                     <div className="small">{b.start} → {b.end}</div>
+                  </div>
+                  <div>
+                    <button className="btn danger" onClick={() => deleteBooking(b.id)}>Delete</button>
                   </div>
                 </div>
               </div>
@@ -387,144 +349,269 @@ export default function App() {
     );
   }
 
-  /* ---------------- Listing / Gallery Modal ---------------- */
-  function ListingModal({ listing, onClose }) {
+  /* ---------------- LISTING MODAL ---------------- */
+  function ListingModal({ l }) {
     const [idx, setIdx] = useState(0);
-    if (!listing) return null;
-    const imgs = listing.images && listing.images.length ? listing.images : [placeholderImage(listing.title)];
+
+    const imgs = l.images?.length ? l.images : [placeholderImage(l.title)];
 
     return (
-      <div className="modal-backdrop" onClick={onClose}>
-        <div className="modal" onClick={(e)=>e.stopPropagation()}>
-          <div style={{display:"flex",gap:12}}>
-            <div style={{flex:1}}>
-              <img src={imgs[idx]} alt="" style={{width:"100%",height:360,objectFit:"cover",borderRadius:10}} />
-              <div style={{display:"flex",gap:8,marginTop:8,overflowX:"auto"}}>
-                {imgs.map((s,i)=>(
-                  <img key={i} src={s} onClick={()=>setIdx(i)} alt="" style={{width:80,height:56,objectFit:"cover",borderRadius:8,cursor:"pointer",outline: i===idx ? "3px solid var(--lavender)" : "none"}} />
-                ))}
-              </div>
-            </div>
-            <div style={{width:320}}>
-              <h3>{listing.title}</h3>
-              <div className="small">{listing.city} • ₹{listing.price}/night</div>
-              <p style={{marginTop:12}}>{listing.description}</p>
-              <div style={{marginTop:18}} className="row">
-                <button className="btn primary" onClick={()=>{ setBookingTarget(listing); setShowBookingModal(true); }}>Book</button>
-                <button className="btn ghost" onClick={onClose}>Close</button>
-              </div>
-            </div>
+      <div className="modal-backdrop" onClick={() => setViewListing(null)}>
+        <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <h3>{l.title}</h3>
+          <img src={imgs[idx]} style={{ width: "100%", height: 350, objectFit: "cover", borderRadius: 10 }} alt="" />
+          <div className="row mt" style={{ overflowX: "auto" }}>
+            {imgs.map((s, i) => (
+              <img
+                key={i}
+                src={s}
+                style={{
+                  width: 80,
+                  height: 60,
+                  objectFit: "cover",
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  outline: i === idx ? "3px solid var(--lavender)" : "none",
+                }}
+                onClick={() => setIdx(i)}
+                alt={`thumb-${i}`}
+              />
+            ))}
+          </div>
+
+          <p className="mt">{l.description}</p>
+
+          <div className="row mt">
+            <button className="btn primary" onClick={() => setBookingTarget(l)}>Book</button>
+            <button className="btn ghost" onClick={() => setViewListing(null)}>Close</button>
           </div>
         </div>
       </div>
     );
   }
 
-  /* ---------------- Booking Modal (requires ID + image upload) ---------------- */
-  function BookingModal({ listing, onClose }) {
-    const [guestName, setGuestName] = useState(currentUser?.username || "");
-    const [guestIdNo, setGuestIdNo] = useState("");
-    const [idProofImage, setIdProofImage] = useState(null);
-    const [start, setStart] = useState("");
-    const [end, setEnd] = useState("");
+  /* ---------------- BOOKING MODAL ---------------- */
+  /* ---------------- BOOKING MODAL (with payment) ---------------- */
+function BookingModal({ l }) {
+  const [guest, setGuest] = useState(currentUser.username || "");
+  const [idNum, setIdNum] = useState("");
+  const [idImg, setIdImg] = useState(null);
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
 
-    const fileInputRef = useRef(null);
+  // payment
+  const [paymentMethod, setPaymentMethod] = useState("card"); // 'card' | 'upi' | 'cash'
+  // card fields
+  const [cardName, setCardName] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState(""); // YYYY-MM or MM/YY
+  const [cardCvv, setCardCvv] = useState("");
+  // upi field
+  const [upi, setUpi] = useState("");
 
-    // convert file to base64
-    function onFile(e) {
-      const f = e.target.files && e.target.files[0];
-      if (!f) return;
-      const reader = new FileReader();
-      reader.onload = () => setIdProofImage(reader.result);
-      reader.onerror = () => alert("Failed to read file");
-      reader.readAsDataURL(f);
+  function onIdFile(e) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => setIdImg(r.result);
+    r.readAsDataURL(f);
+  }
+
+  function onCardFile(e) {
+    // noop placeholder if you later want to allow card image receipts; not used now
+  }
+
+  // basic luhn check for card numbers (numbers only)
+  function luhnCheck(num) {
+    const digits = num.replace(/\D/g, "");
+    let sum = 0;
+    let shouldDouble = false;
+    for (let i = digits.length - 1; i >= 0; i--) {
+      let d = parseInt(digits.charAt(i), 10);
+      if (shouldDouble) {
+        d = d * 2;
+        if (d > 9) d -= 9;
+      }
+      sum += d;
+      shouldDouble = !shouldDouble;
     }
+    return sum % 10 === 0;
+  }
 
-    function submit(e) {
-      e.preventDefault();
-      if (!guestName.trim() || !guestIdNo.trim()) return alert("Enter name and ID number");
-      if (!idProofImage) return alert("Please upload an image of your ID proof");
-      if (!start || !end || new Date(start) > new Date(end)) return alert("Pick valid start and end dates");
+  function maskUPI(vpa) {
+    // mask middle of vpa like j***@bank or show as entered if short
+    if (!vpa || vpa.length < 3) return vpa;
+    const parts = vpa.split("@");
+    if (parts.length !== 2) return vpa;
+    const name = parts[0];
+    const domain = parts[1];
+    if (name.length <= 2) return name + "@" + domain;
+    return name[0] + "*".repeat(Math.max(1, name.length - 2)) + name[name.length - 1] + "@" + domain;
+  }
 
-      // if user is signed in, require match
-      if (currentUser && guestName !== currentUser.username) return alert("Name must match the signed-in user");
-      // save booking
-      const b = {
-        id: uid("bk-"),
-        listingId: listing.id,
-        listingTitle: listing.title,
-        guestName,
-        guestIdNo,
-        idProofImage,
-        start, end,
-        userId: currentUser ? currentUser.id : null,
-        createdAt: new Date().toISOString()
+  function save() {
+    // basic booking validation
+    if (!guest.trim() || !idNum.trim()) return alert("Enter full name and ID number");
+    if (!idImg) return alert("Please upload an image of your ID proof");
+    if (!start || !end || new Date(start) > new Date(end)) return alert("Pick valid start and end dates");
+
+    // payment validation & prepare payment details
+    let payment = { method: paymentMethod, details: null };
+
+    if (paymentMethod === "card") {
+      const digits = (cardNumber || "").replace(/\s+/g, "");
+      if (!cardName.trim()) return alert("Enter name on card");
+      if (!/^\d{12,19}$/.test(digits)) return alert("Enter a valid card number (digits only)");
+      if (!luhnCheck(digits)) return alert("Card number looks invalid");
+      // expiry: try accept MM/YY or YYYY-MM
+      if (!cardExpiry.trim()) return alert("Enter card expiry");
+      if (!/^\d{2}\/\d{2}$/.test(cardExpiry) && !/^\d{4}-\d{2}$/.test(cardExpiry) && !/^\d{2}-\d{2}$/.test(cardExpiry)) {
+        // we won't be strict — just warn if weird
+        // continue, but could alert
+      }
+      // DO NOT STORE CVV — we will not save it
+      const last4 = digits.slice(-4);
+      payment.details = {
+        cardName: cardName.trim(),
+        last4,
+        expiry: cardExpiry.trim()
       };
-      setBookings([b, ...bookings]);
-      alert("Booking saved ✅");
-      onClose();
+    } else if (paymentMethod === "upi") {
+      const vpa = upi.trim();
+      if (!vpa) return alert("Enter UPI VPA (example: name@bank)");
+      if (!/^.+@.+$/.test(vpa)) return alert("UPI VPA looks invalid (must include @)");
+      payment.details = { vpa: maskUPI(vpa) }; // store masked VPA for demo
+    } else {
+      // cash on arrival
+      payment.details = null;
     }
 
-    return (
-      <div className="modal-backdrop" onClick={onClose}>
-        <div className="modal" onClick={(e)=>e.stopPropagation()}>
-          <h3>Book: {listing.title}</h3>
-          <form onSubmit={submit}>
-            <label className="small">Full name</label>
-            <input className="input" value={guestName} onChange={(e)=>setGuestName(e.target.value)} />
+    // Create booking object (DO NOT store CVV or full card number)
+    const booking = {
+      id: uid("b-"),
+      userId: currentUser.id,
+      listingId: l.id,
+      listingTitle: l.title,
+      guestName: guest.trim(),
+      guestIdNo: idNum.trim(),
+      idProofImage: idImg,
+      start,
+      end,
+      payment, // method + safe details
+      createdAt: new Date().toISOString()
+    };
 
-            <label className="small">ID proof number</label>
-            <input className="input" value={guestIdNo} onChange={(e)=>setGuestIdNo(e.target.value)} />
+    // save booking
+    setBookings([booking, ...bookings]);
+    setBookingTarget(null);
+    alert("Booking saved ✅ Payment method: " + payment.method.toUpperCase());
+  }
 
-            <label className="small">Upload ID proof image (photo)</label>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={onFile} />
+  return (
+    <div className="modal-backdrop" onClick={() => setBookingTarget(null)}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h3>Book: {l.title}</h3>
 
-            {idProofImage && <div style={{marginTop:8}}><img src={idProofImage} alt="id" style={{width:160,height:110,objectFit:"cover",borderRadius:8}}/></div>}
+        <label className="small">Full Name</label>
+        <input className="input" value={guest} onChange={(e) => setGuest(e.target.value)} />
 
-            <div className="row mt">
-              <div style={{flex:1}}>
-                <label className="small">Start</label>
-                <input className="input" type="date" value={start} onChange={(e)=>setStart(e.target.value)} />
-              </div>
-              <div style={{flex:1}}>
-                <label className="small">End</label>
-                <input className="input" type="date" value={end} onChange={(e)=>setEnd(e.target.value)} />
-              </div>
+        <label className="small">ID proof number</label>
+        <input className="input" value={idNum} onChange={(e) => setIdNum(e.target.value)} />
+
+        <label className="small">Upload ID proof image (photo)</label>
+        <input type="file" accept="image/*" onChange={onIdFile} />
+        {idImg && <div style={{ marginTop: 8 }}><img src={idImg} alt="id" style={{ width: 160, height: 110, objectFit: "cover", borderRadius: 8 }} /></div>}
+
+        <div className="mt"><strong>Payment</strong></div>
+
+        <div className="row mt">
+          <label style={{display:"flex",alignItems:"center",gap:8}}>
+            <input type="radio" name="pm" checked={paymentMethod === "card"} onChange={() => setPaymentMethod("card")} /> Card
+          </label>
+          <label style={{display:"flex",alignItems:"center",gap:8}}>
+            <input type="radio" name="pm" checked={paymentMethod === "upi"} onChange={() => setPaymentMethod("upi")} /> UPI
+          </label>
+          <label style={{display:"flex",alignItems:"center",gap:8}}>
+            <input type="radio" name="pm" checked={paymentMethod === "cash"} onChange={() => setPaymentMethod("cash")} /> Cash on arrival
+          </label>
+        </div>
+
+        {paymentMethod === "card" && (
+          <div style={{ marginTop: 10 }}>
+            <input className="input" placeholder="Name on card" value={cardName} onChange={(e) => setCardName(e.target.value)} />
+            <input className="input" placeholder="Card number (digits only or with spaces)" value={cardNumber} onChange={(e) => {
+              // auto-space every 4 digits for nicer UX
+              const v = e.target.value.replace(/\D/g,'').slice(0,19);
+              const spaced = v.replace(/(.{4})/g,'$1 ').trim();
+              setCardNumber(spaced);
+            }} />
+            <div style={{ display: "flex", gap: 8 }}>
+              <input className="input" placeholder="MM/YY or YYYY-MM" value={cardExpiry} onChange={(e) => setCardExpiry(e.target.value)} />
+              <input className="input" placeholder="CVV (not stored)" value={cardCvv} onChange={(e) => setCardCvv(e.target.value)} />
             </div>
+            <div className="small">Note: CVV is not stored. This is demo-only; do not enter real card details for production use.</div>
+          </div>
+        )}
 
-            <div style={{display:"flex",gap:8,marginTop:12}}>
-              <button className="btn primary" type="submit">Confirm booking</button>
-              <button type="button" className="btn ghost" onClick={onClose}>Cancel</button>
-            </div>
-          </form>
+        {paymentMethod === "upi" && (
+          <div style={{ marginTop: 10 }}>
+            <input className="input" placeholder="UPI VPA (example: name@bank)" value={upi} onChange={(e) => setUpi(e.target.value)} />
+            <div className="small">We'll store a masked version of your VPA for demo purposes.</div>
+          </div>
+        )}
+
+        <div className="row mt">
+          <div style={{ flex: 1 }}>
+            <label className="small">Start</label>
+            <input className="input" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <label className="small">End</label>
+            <input className="input" type="date" value={end} onChange={(e) => setEnd(e.target.value)} />
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+          <button className="btn primary" onClick={save}>Confirm booking</button>
+          <button className="btn ghost" onClick={() => setBookingTarget(null)}>Cancel</button>
         </div>
       </div>
-    );
-  }
-
-  /* ---------------- Render top-level modes ---------------- */
-  // choose which view to show
-  if (mode === "landing") return <Landing />;
-  if (mode === "host-signup") return <HostSignup />;
-  if (mode === "host-login") return <HostLogin />;
-  if (mode === "host") {
-    if (!currentHost) { setMode("host-login"); return null; }
-    return <HostPortal />;
-  }
-  if (mode === "user-signup") return <UserSignup />;
-  if (mode === "user-login") return <UserLogin />;
-  if (mode === "user") {
-    if (!currentUser) { setMode("user-login"); return null; }
-    return <UserPortal />;
-  }
-
-  // global modals: listing viewer and booking modal
-  return (
-    <div>
-      {/* fallback to landing */}
-      <Landing />
-      {viewListing && <ListingModal listing={viewListing} onClose={()=>setViewListing(null)} />}
-      {showBookingModal && bookingTarget && <BookingModal listing={bookingTarget} onClose={() => { setShowBookingModal(false); setBookingTarget(null); }} />}
     </div>
   );
+}
+
+
+  /* ---------------- ROUTING ---------------- */
+  if (mode === "landing")
+    return (
+      <>
+        <Landing />
+        {viewListing && <ListingModal l={viewListing} />}
+        {bookingTarget && <BookingModal l={bookingTarget} />}
+      </>
+    );
+
+  if (mode === "host-signup") return <Signup kind="Host" />;
+  if (mode === "host-login") return <Login kind="Host" />;
+  if (mode === "user-signup") return <Signup kind="User" />;
+  if (mode === "user-login") return <Login kind="User" />;
+
+  if (mode === "host" && currentHost)
+    return (
+      <>
+        <HostPage />
+        {viewListing && <ListingModal l={viewListing} />}
+      </>
+    );
+
+  if (mode === "user" && currentUser)
+    return (
+      <>
+        <UserPage />
+        {viewListing && <ListingModal l={viewListing} />}
+        {bookingTarget && <BookingModal l={bookingTarget} />}
+      </>
+    );
+
+  return <div className="container">Invalid mode</div>;
 }
