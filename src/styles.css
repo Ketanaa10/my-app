@@ -1,0 +1,220 @@
+/* ==== GLOBAL STYLES ==== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  background: #f8fafc;
+  color: #1e293b;
+  overflow-x: hidden;
+}
+
+/* ==== NAVBAR ==== */
+nav {
+  background: linear-gradient(90deg, #0077b6, #0096c7);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 60px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+nav h1 {
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin: 0 18px;
+  font-weight: 500;
+  transition: opacity 0.3s ease;
+}
+
+nav a:hover {
+  opacity: 0.8;
+}
+
+/* ==== MAIN CONTAINER ==== */
+.container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 40px auto;
+}
+
+/* ==== HEADINGS ==== */
+h1, h2, h3 {
+  color: #023e8a;
+  margin-bottom: 15px;
+}
+
+/* ==== SEARCH BAR ==== */
+.search-bar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.search-bar input {
+  width: 60%;
+  max-width: 400px;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 30px;
+  outline: none;
+  font-size: 15px;
+  transition: 0.3s ease;
+}
+
+.search-bar input:focus {
+  border-color: #0077b6;
+  box-shadow: 0 0 6px rgba(0, 119, 182, 0.3);
+}
+
+/* ==== CARD GRID ==== */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+/* ==== CARD ==== */
+.card {
+  background: #ffffff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.card-content {
+  padding: 18px 20px;
+  flex: 1;
+}
+
+.card-content h3 {
+  margin: 0 0 8px;
+  color: #023e8a;
+  font-size: 1.2rem;
+}
+
+.card-content p {
+  margin: 5px 0;
+  color: #475569;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.price {
+  margin-top: 10px;
+  font-weight: 600;
+  color: #0077b6;
+  font-size: 1rem;
+}
+
+/* ==== BUTTON ==== */
+button, .btn {
+  background: #0077b6;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+button:hover, .btn:hover {
+  background: #023e8a;
+  transform: translateY(-2px);
+}
+
+a.view-link {
+  color: #0077b6;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+a.view-link:hover {
+  color: #023e8a;
+  text-decoration: underline;
+}
+
+/* ==== FORM ==== */
+form {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 25px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+  margin: 20px auto;
+  max-width: 600px;
+}
+
+form input, form textarea, form select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+form input:focus, form textarea:focus, form select:focus {
+  border-color: #0077b6;
+  outline: none;
+  box-shadow: 0 0 4px rgba(0,119,182,0.3);
+}
+
+/* ==== FOOTER ==== */
+footer {
+  background: #023e8a;
+  color: white;
+  text-align: center;
+  padding: 18px;
+  margin-top: 50px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+/* ==== RESPONSIVE ==== */
+@media (max-width: 768px) {
+  nav {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  nav a {
+    margin: 8px 10px;
+  }
+
+  .search-bar input {
+    width: 85%;
+  }
+
+  .card img {
+    height: 180px;
+  }
+}
+
